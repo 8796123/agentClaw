@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl wget jq ripgrep git \
     && rm -rf /var/lib/apt/lists/*
 
+# 创建 python 符号链接指向 python3
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
 # pip 使用阿里云镜像
 RUN pip3 config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 

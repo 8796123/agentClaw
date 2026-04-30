@@ -67,6 +67,69 @@ async function fetchAllUsers(
 }
 
 /**
+ * Update openclaw.json to set sandbox configuration for a specific agent.
+ * @param openclawHome - The OpenClaw home directory path
+ * @param agentId - The agent ID to configure
+ * @param sandboxConfig - Optional sandbox configuration to apply (e.g., { tools: { deny: [...] } })
+ */
+async function updateAgentSandboxConfig(
+  openclawHome: string,
+  agentId: string,
+  sandboxConfig?: Record<string, unknown>
+): Promise<void> {
+  // If no sandbox config is provided, skip the update
+  if (!sandboxConfig) {
+    return;
+  }
+
+  const configPath = path.join(openclawHome, "openclaw.json");
+  
+  if (!fs.existsSync(configPath)) {
+    console.warn(`[agents] openclaw.json not found at ${configPath}, skipping sandbox config`);
+    return;
+  }
+
+  try {
+    const cfg = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    
+    // Ensure agents object exists
+    if (!cfg.agents) {
+      cfg.agents = {};
+    }
+    
+    // Ensure agents.list array exists
+    if (!Array.isArray(cfg.agents.list)) {
+      cfg.agents.list = [];
+    }
+    
+    // Find or create agent config in the list
+    let agentConfig = cfg.agents.list.find((a: Record<string, unknown>) => a.id === agentId);
+    
+    if (!agentConfig) {
+      agentConfig = { id: agentId };
+      cfg.agents.list.push(agentConfig);
+    }
+    
+    // Apply sandbox configuration from caller
+    // This allows flexible sandbox settings per agent
+    if (!agentConfig.tools) {
+      agentConfig.tools = {};
+    }
+    if (!agentConfig.tools.sandbox) {
+      agentConfig.tools.sandbox = {};
+    }
+    
+    // Merge the provided sandbox config (supports nested objects like { tools: { deny: [...] } })
+    Object.assign(agentConfig.tools.sandbox, sandboxConfig);
+    
+    fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2), "utf-8");
+    console.log(`[agents] Updated sandbox config for agent ${agentId}:`, JSON.stringify(sandboxConfig));
+  } catch (err) {
+    console.error(`[agents] Failed to update sandbox config for agent ${agentId}:`, err);
+  }
+}
+
+/**
  * Get the root directory for a specific agent.
  * main agent uses ~/.openclaw/workspace, others use ~/.openclaw/workspace-{agentId}
  */
@@ -186,7 +249,7 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
       return;
     }
 
-    const { name, workspace, emoji, avatar, installed_skills, model, agentId } = req.body;
+    const { name, workspace, emoji, avatar, installed_skills, model, agentId, sandbox } = req.body;
 
     // If agentId is provided, use it as the agent id (for user-agent mapping)
     const actualAgentId = agentId || name;
@@ -205,7 +268,10 @@ export function agentsRoutes(client: BridgeGatewayClient, config: BridgeConfig):
 
       const result = await client.request<Record<string, unknown>>("agents.create", params);
 
-      // Note: We don't update openclaw.json anymore.
+      // Update openclaw.json to set sandbox configuration if provided
+      // sandbox param example: { tools: { deny: ["set-skill-instructions", "set-skill-name-description"] } }
+      await updateAgentSandboxConfig(config.openclawHome, actualAgentId, sandbox);
+
       // Agents are tracked in platform database (UserAgent table) and
       // the bridge's /api/agents endpoint fetches from platform directly.
 

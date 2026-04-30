@@ -13,7 +13,6 @@ export interface BridgeConfig {
   workspacePath: string;
   uploadsPath: string;
   sessionsPath: string;
-  enableAutoReview: boolean; // 是否启用自动审核agent
 }
 
 export function loadConfig(): BridgeConfig {
@@ -27,8 +26,7 @@ export function loadConfig(): BridgeConfig {
   const workspacePath = process.env.OPENCLAW_WORKSPACE || path.join(openclawHome, "workspace");
   const uploadsPath = path.join(openclawHome, "uploads");
   const sessionsPath = path.join(openclawHome, "sessions");
-  // 默认不启用自动审核，需要管理员显式开启
-  const enableAutoReview = process.env.BRIDGE_ENABLE_AUTO_REVIEW === "true";
+
 
   return {
     proxyUrl,
@@ -41,7 +39,6 @@ export function loadConfig(): BridgeConfig {
     workspacePath,
     uploadsPath,
     sessionsPath,
-    enableAutoReview,
   };
 }
 
@@ -73,6 +70,11 @@ export function writeOpenclawConfig(cfg: BridgeConfig): void {
       web: {
         fetch: { enabled: true },
         search: { enabled: true },
+      },
+      sandbox: { 
+        tools: {
+          allow: ["group:runtime", "group:fs", "set-skill-instructions", "set-skill-name-description"],
+        }
       },
     },
     agents: {
@@ -120,6 +122,13 @@ export function writeOpenclawConfig(cfg: BridgeConfig): void {
           `http://127.0.0.1:${cfg.gatewayPort}`,
         ],
       },
+    },
+    plugins: {
+      enabled: true,
+      allow: ["digiavatar"],
+      entries: {
+        "digiavatar": { enabled: true },
+      }
     },
   };
 

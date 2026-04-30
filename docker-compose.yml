@@ -48,9 +48,11 @@ services:
       FRAMECLAW_AGENTS__DEFAULTS__SANDBOX__MODE: "all"
       FRAMECLAW_AGENTS__DEFAULTS__SANDBOX__SCOPE: "agent"
       FRAMECLAW_AGENTS__DEFAULTS__SANDBOX__PRUNE__IDLEHOURS: "2"
-      BRIDGE_ENABLE_AUTO_REVIEW: "true"
       # OPENCLAW_HOME must match host path so sandbox bind mounts resolve correctly
       OPENCLAW_HOME: ${HOME}/.openclaw
+      HOME: ${HOME}
+      # Plugins to install on startup (space-separated list)
+      OPENCLAW_PLUGINS: ${OPENCLAW_PLUGINS:-}
       # Search API keys for web_search tool (auto-detected by OpenClaw)
       KIMI_API_KEY: ${KIMI_API_KEY:-}
       MOONSHOT_API_KEY: ${MOONSHOT_API_KEY:-}

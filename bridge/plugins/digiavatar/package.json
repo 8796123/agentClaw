@@ -1,0 +1,14 @@
+{
+	"name": "digiavatar",
+	"version": "1.0.1",
+	"type": "module",
+	"main": "index.ts",
+	"dependencies": {
+		"better-sqlite3": "^12.9.0"
+	},
+	"openclaw": {
+		"extensions": [
+			"./index.ts"
+		]
+	}
+}

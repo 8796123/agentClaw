@@ -63,6 +63,7 @@ async def _create_agent_in_openclaw(
     name: str,
     is_admin: bool = False,
     set_soul: bool = True,
+    sandbox_config: dict | None = None,
 ) -> bool:
     """Create an agent in the shared OpenClaw instance.
 
@@ -77,9 +78,16 @@ async def _create_agent_in_openclaw(
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
+            # Build request body
+            body: dict = {"name": name, "agentId": openclaw_agent_id}
+            
+            # Add sandbox config for non-admin users (restrict skill modification)
+            if sandbox_config:
+                body["sandbox"] = sandbox_config
+            
             resp = await client.post(
                 f"{bridge_url}/api/agents",
-                json={"name": name, "agentId": openclaw_agent_id},
+                json=body,
                 headers={"X-Is-Admin": "true"},
             )
             if resp.status_code != 200:
@@ -212,12 +220,19 @@ async def create_agent(
     )
     is_first = result.scalar_one() == 0
 
+    # Note: Users who manually create agents should NOT get sandbox restrictions
+    # Only the default agent created during registration should have sandbox restrictions
+    # This allows power users to create agents with full skill modification capabilities
+    sandbox_config = None
+    print(f"[agents] Manual agent creation by user {user.id}, no sandbox config applied")
+
     # Create agent in OpenClaw first (manual creates don't get SkillClaw soul)
     created = await _create_agent_in_openclaw(
         openclaw_agent_id=openclaw_agent_id,
         name=req.name,
         is_admin=(user.role == "admin"),
         set_soul=False,
+        sandbox_config=sandbox_config,
     )
     if not created:
         raise HTTPException(

@@ -66,17 +66,34 @@ async def _create_default_agent_for_user(
     # Create agent in OpenClaw first
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
+            # Build request body
+            body: dict = {"name": agent_name, "agentId": openclaw_agent_id}
+            
+            # Always add sandbox config for registered users' default agent
+            # This restricts skill modification for security
+            body["sandbox"] = {
+                "tools": {
+                    "deny": ["set-skill-instructions", "set-skill-name-description"]
+                }
+            }
+            print(f"[auth] Creating default agent for user {user_id} with sandbox config (registration flow)")
+            
+            print(f"[auth] Creating agent in OpenClaw: agentId={openclaw_agent_id}, name={agent_name}")
             resp = await client.post(
                 f"{bridge_url}/api/agents",
-                json={"name": agent_name, "agentId": openclaw_agent_id},
+                json=body,
                 headers={"X-Is-Admin": "true"},
             )
+            
+            print(f"[auth] OpenClaw agent creation response: status={resp.status_code}")
             if resp.status_code != 200:
-                print(f"[auth] Failed to create agent in OpenClaw for {user_id}: {resp.status_code} - {resp.text}")
+                error_text = await resp.text()
+                print(f"[auth] Failed to create agent in OpenClaw for {user_id}: {resp.status_code} - {error_text}")
                 return None
 
             # For regular users, set SOUL.md and optionally AGENTS.md
             if not is_admin:
+                print(f"[auth] Setting SOUL.md for agent {openclaw_agent_id}")
                 soul_resp = await client.put(
                     f"{bridge_url}/api/agents/{openclaw_agent_id}/files/SOUL.md",
                     json={"content": load_soul_md()},
@@ -87,6 +104,7 @@ async def _create_default_agent_for_user(
 
                 agents_md = load_agents_md()
                 if agents_md is not None:
+                    print(f"[auth] Setting AGENTS.md for agent {openclaw_agent_id}")
                     agents_resp = await client.put(
                         f"{bridge_url}/api/agents/{openclaw_agent_id}/files/AGENTS.md",
                         json={"content": agents_md},
@@ -96,6 +114,8 @@ async def _create_default_agent_for_user(
                         print(f"[auth] Warning: Failed to set AGENTS.md for agent {openclaw_agent_id}")
     except Exception as e:
         print(f"[auth] Failed to create agent in OpenClaw for user {user_id}: {e}")
+        import traceback
+        print(f"[auth] Traceback: {traceback.format_exc()}")
         return None
 
     # Create UserAgent record in database

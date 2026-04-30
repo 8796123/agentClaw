@@ -1,0 +1,8 @@
+{
+  "id": "digiavatar",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
