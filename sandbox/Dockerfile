@@ -3,7 +3,7 @@
 #
 # 构建：docker build -t openclaw-sandbox:agentclaw ./sandbox/
 
-FROM node:20-bookworm-slim
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:22-slim-linuxarm64
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8

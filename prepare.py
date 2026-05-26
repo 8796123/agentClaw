@@ -124,6 +124,8 @@ _ALL_API_KEYS = [
     "HOSTED_VLLM_API_KEY",
     "BRAVE_API_KEY",
     "PERPLEXITY_API_KEY",
+    "LLM_API_BASE",
+    "LLM_API_KEY"
 ]
 
 
@@ -212,7 +214,7 @@ def check_env_file(fix: bool) -> CheckResult:
 # ── 主流程 ────────────────────────────────────────────────────────────
 
 DOCKER_IMAGES = [
-    "postgres:16-alpine",
+    "swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/postgres:16-alpine-linuxarm64",
 ]
 
 

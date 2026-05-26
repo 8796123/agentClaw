@@ -13,7 +13,7 @@ name: openclaw
 services:
   postgres:
     container_name: openclaw-postgres
-    image: postgres:16-alpine
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/postgres:16-alpine-linuxarm64
     environment:
       POSTGRES_USER: frameclaw
       POSTGRES_PASSWORD: frameclaw
@@ -33,7 +33,7 @@ services:
   # Shared OpenClaw instance - serves all users with Agent sandbox isolation
   openclaw-shared:
     container_name: openclaw-shared
-    image: ${OPENCLAW_IMAGE:-openclaw:latest}
+    image: ${OPENCLAW_IMAGE:-openclaw:2026.3.8}
     build:
       context: ./bridge
       args:

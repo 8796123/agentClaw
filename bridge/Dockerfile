@@ -1,4 +1,4 @@
-FROM node:22-slim
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:22-slim-linuxarm64
 
 # Use China mirrors for faster builds
 RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources

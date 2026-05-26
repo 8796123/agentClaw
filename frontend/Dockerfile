@@ -1,5 +1,5 @@
 # ── Stage 1: Build ────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:22-slim-linuxarm64 AS builder
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
 
 # ── Stage 2: Serve with nginx ────────────────────────────────────────
-FROM nginx:alpine
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/nginx:alpine-linuxarm64
 
 # Remove default config
 RUN rm /etc/nginx/conf.d/default.conf
